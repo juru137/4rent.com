@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { listings } from "../lib/listings";
 
+type ThemeMode = "light" | "dark";
+
 const heroImages = [
   "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
@@ -13,6 +15,92 @@ const heroImages = [
 
 const INITIAL_VISIBLE_COUNT = 12;
 const LOAD_STEP = 12;
+
+function ThemeToggle({
+  theme,
+  setTheme,
+}: {
+  theme: ThemeMode;
+  setTheme: Dispatch<SetStateAction<ThemeMode>>;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      className="rounded-full border border-[var(--border-color)] bg-[var(--surface)] p-2 text-[var(--foreground)] transition hover:border-emerald-500 hover:text-emerald-600"
+      aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+    >
+      {theme === "light" ? (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5" />
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <section className="rounded-[2rem] border border-slate-200 bg-slate-100 p-4 shadow-lg sm:p-6">
+        <div className="h-72 rounded-[1.5rem] bg-slate-200 animate-pulse" />
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <span key={index} className="h-2.5 w-2.5 rounded-full bg-slate-200 animate-pulse" />
+          ))}
+        </div>
+        <div className="mt-5 grid gap-3 rounded-2xl bg-slate-50 p-3 shadow-inner lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="space-y-3 rounded-xl border border-slate-200 bg-white p-3">
+              <div className="h-3 w-24 rounded-full bg-slate-200 animate-pulse" />
+              <div className="h-8 rounded-[1rem] bg-slate-200 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] border border-slate-200 bg-slate-100 p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <div className="h-4 w-32 rounded-full bg-slate-200 animate-pulse" />
+            <div className="h-8 w-64 rounded-full bg-slate-200 animate-pulse" />
+          </div>
+          <div className="h-10 w-40 rounded-full bg-slate-200 animate-pulse" />
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur">
+              <div className="h-5 w-24 rounded-full bg-slate-200 animate-pulse" />
+              <div className="mt-3 h-4 w-full rounded-full bg-slate-200 animate-pulse" />
+              <div className="mt-2 h-4 w-3/4 rounded-full bg-slate-200 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] border border-slate-200 bg-slate-100 p-6 shadow-sm sm:p-8">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto h-4 w-36 rounded-full bg-slate-200 animate-pulse" />
+          <div className="mx-auto h-8 w-60 rounded-full bg-slate-200 animate-pulse" />
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="rounded-2xl bg-slate-50 p-5">
+              <div className="h-4 w-full rounded-full bg-slate-200 animate-pulse" />
+              <div className="mt-3 h-4 w-3/4 rounded-full bg-slate-200 animate-pulse" />
+              <div className="mt-3 h-4 w-1/2 rounded-full bg-slate-200 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
 
 function DesktopView({
   activeImage,
@@ -42,7 +130,7 @@ function DesktopView({
 }) {
   return (
     <div className="hidden lg:block">
-      <section className="w-full rounded-[2rem] border border-slate-200 bg-white p-4 shadow-lg sm:p-6">
+      <section className="w-full rounded-[2rem] border border-[var(--border-color)] bg-[var(--surface-strong)] p-4 shadow-lg sm:p-6">
         <div className="overflow-hidden rounded-[1.5rem]">
           <Image
             src={heroImages[activeImage]}
@@ -68,9 +156,9 @@ function DesktopView({
           ))}
         </div>
 
-        <form className="mt-5 grid gap-3 rounded-2xl bg-slate-50 p-3 shadow-inner lg:grid-cols-4">
-          <label className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-3 text-sm">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Location</span>
+        <form className="mt-5 grid gap-3 rounded-2xl bg-[var(--surface)] p-3 shadow-inner lg:grid-cols-4">
+          <label className="flex flex-col gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--surface-strong)] p-3 text-sm">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">Location</span>
             <select
               value={filters.location}
               onChange={(e) => setFilters({ ...filters, location: e.target.value })}
@@ -482,6 +570,29 @@ export default function Home() {
     type: "Any type",
     price: "Any price",
   });
+  const [theme, setTheme] = useState<ThemeMode>("light");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const storedTheme = window.localStorage.getItem("theme");
+    if (storedTheme === "light" || storedTheme === "dark") {
+      setTheme(storedTheme);
+    } else {
+      setTheme("light");
+    }
+    setIsLoading(true);
+
+    const loadingTimer = window.setTimeout(() => {
+      setIsLoading(false);
+    }, 700);
+
+    return () => window.clearTimeout(loadingTimer);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    window.localStorage.setItem("theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -512,17 +623,17 @@ export default function Home() {
   const isShowingAll = visibleCount >= filteredListings.length;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
-      <nav className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-4 shadow-sm backdrop-blur sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      <nav className="sticky top-0 z-40 border-b border-[var(--border-color)] bg-[var(--surface-strong)] px-4 py-4 shadow-sm backdrop-blur sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-semibold tracking-wide text-slate-900">4Rent</span>
+            <span className="text-xl font-semibold tracking-wide text-[var(--foreground)]">4Rent</span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 text-[var(--foreground)]">
             <a
               href="tel:+256700000000"
-              className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600"
+              className="flex items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-emerald-500 hover:text-emerald-600"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -543,7 +654,7 @@ export default function Home() {
               href="https://wa.me/256700000000"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600"
+              className="flex items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-emerald-500 hover:text-emerald-600"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -556,6 +667,8 @@ export default function Home() {
               <span className="hidden sm:inline">+256 700 111 111</span>
             </a>
 
+            <ThemeToggle theme={theme} setTheme={setTheme} />
+
             <a
               href="/login"
               className="rounded-full bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
@@ -567,34 +680,40 @@ export default function Home() {
       </nav>
 
       <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <DesktopView
-          activeImage={activeImage}
-          setActiveImage={setActiveImage}
-          visibleCount={visibleCount}
-          visibleListings={visibleListings}
-          filteredListings={filteredListings}
-          setVisibleCount={setVisibleCount}
-          isShowingAll={isShowingAll}
-          filters={filters}
-          setFilters={(nextFilters) => {
-            setFilters(nextFilters);
-            setVisibleCount(INITIAL_VISIBLE_COUNT);
-          }}
-        />
-        <MobileView
-          activeImage={activeImage}
-          setActiveImage={setActiveImage}
-          visibleCount={visibleCount}
-          visibleListings={visibleListings}
-          filteredListings={filteredListings}
-          setVisibleCount={setVisibleCount}
-          isShowingAll={isShowingAll}
-          filters={filters}
-          setFilters={(nextFilters) => {
-            setFilters(nextFilters);
-            setVisibleCount(INITIAL_VISIBLE_COUNT);
-          }}
-        />
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : (
+          <>
+            <DesktopView
+              activeImage={activeImage}
+              setActiveImage={setActiveImage}
+              visibleCount={visibleCount}
+              visibleListings={visibleListings}
+              filteredListings={filteredListings}
+              setVisibleCount={setVisibleCount}
+              isShowingAll={isShowingAll}
+              filters={filters}
+              setFilters={(nextFilters) => {
+                setFilters(nextFilters);
+                setVisibleCount(INITIAL_VISIBLE_COUNT);
+              }}
+            />
+            <MobileView
+              activeImage={activeImage}
+              setActiveImage={setActiveImage}
+              visibleCount={visibleCount}
+              visibleListings={visibleListings}
+              filteredListings={filteredListings}
+              setVisibleCount={setVisibleCount}
+              isShowingAll={isShowingAll}
+              filters={filters}
+              setFilters={(nextFilters) => {
+                setFilters(nextFilters);
+                setVisibleCount(INITIAL_VISIBLE_COUNT);
+              }}
+            />
+          </>
+        )}
       </main>
 
       <footer className="border-t border-slate-200 bg-white px-4 py-8 text-sm text-slate-600 sm:px-6 lg:px-8">
