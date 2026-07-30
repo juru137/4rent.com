@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, useRef, type Dispatch, type SetStateAction } from "react";
 import { listings } from "../lib/listings";
 
 type ThemeMode = "light" | "dark";
@@ -108,10 +108,13 @@ function DesktopView({
   visibleCount,
   visibleListings,
   filteredListings,
-  setVisibleCount,
   isShowingAll,
   filters,
   setFilters,
+  onShowLess,
+  onShowMore,
+  animatedStartIndex,
+  isCollapsing,
 }: {
   activeImage: number;
   setActiveImage: (value: number) => void;
@@ -127,6 +130,10 @@ function DesktopView({
     price: string;
   };
   setFilters: (value: { location: string; rooms: string; type: string; price: string }) => void;
+  onShowLess: () => void;
+  onShowMore: () => void;
+  animatedStartIndex: number | null;
+  isCollapsing: boolean;
 }) {
   return (
     <div className="hidden lg:block">
@@ -232,10 +239,12 @@ function DesktopView({
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-            {visibleListings.map((item) => (
+            {visibleListings.map((item, index) => (
               <article
                 key={item.id}
-                className="flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                className={`flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${
+                  animatedStartIndex !== null && index >= animatedStartIndex ? "animate-fadeInUp" : ""
+                } ${isCollapsing ? "animate-fadeOut" : ""}`}
               >
                 <Link href={`/rooms/${item.id}`} className="flex h-full flex-col">
                   <div className="relative">
@@ -281,7 +290,7 @@ function DesktopView({
           <div className="mt-8 flex justify-center">
             <button
               type="button"
-              onClick={() => setVisibleCount((prev) => Math.min(filteredListings.length, prev + LOAD_STEP))}
+              onClick={onShowMore}
               className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               Show more
@@ -291,7 +300,7 @@ function DesktopView({
           <div className="mt-8 flex justify-center">
             <button
               type="button"
-              onClick={() => setVisibleCount(INITIAL_VISIBLE_COUNT)}
+              onClick={onShowLess}
               className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               Show less
@@ -329,9 +338,9 @@ function DesktopView({
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {[
-            ["“I found a beautiful room within a day and the process felt effortless.”", "— Amina, Nairobi"],
-            ["“The search filters helped me narrow down options quickly.”", "— Daniel, Kisumu"],
-            ["“Amazing support and very clear property details.”", "— Grace, Mombasa"],
+            ["“I found a beautiful room within a day and the process felt effortless.”", "— Amina, Kisaasi"],
+            ["“The search filters helped me narrow down options quickly.”", "— Daniel, Kyebando"],
+            ["“Amazing support and very clear property details.”", "— Grace, Ntinda"],
           ].map(([quote, author]) => (
             <div key={quote} className="rounded-2xl bg-slate-50 p-5">
               <p className="text-slate-700">{quote}</p>
@@ -354,6 +363,7 @@ function MobileView({
   isShowingAll,
   filters,
   setFilters,
+  onShowLess,
 }: {
   activeImage: number;
   setActiveImage: (value: number) => void;
@@ -369,6 +379,7 @@ function MobileView({
     price: string;
   };
   setFilters: (value: { location: string; rooms: string; type: string; price: string }) => void;
+  onShowLess: () => void;
 }) {
   return (
     <div className="lg:hidden">
@@ -527,7 +538,7 @@ function MobileView({
           <div className="mt-5 flex justify-center">
             <button
               type="button"
-              onClick={() => setVisibleCount(INITIAL_VISIBLE_COUNT)}
+              onClick={onShowLess}
               className="rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
             >
               Show less
@@ -572,10 +583,15 @@ export default function Home() {
   });
   const [theme, setTheme] = useState<ThemeMode>("light");
   const [isLoading, setIsLoading] = useState(true);
+  const listingsRef = useRef<HTMLDivElement>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [animatedStartIndex, setAnimatedStartIndex] = useState<number | null>(null);
+  const [isCollapsing, setIsCollapsing] = useState(false);
 
   useEffect(() => {
     const storedTheme = window.localStorage.getItem("theme");
     if (storedTheme === "light" || storedTheme === "dark") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(storedTheme);
     } else {
       setTheme("light");
@@ -601,6 +617,33 @@ export default function Home() {
 
     return () => window.clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleShowLess = () => {
+    setIsCollapsing(true);
+    setTimeout(() => {
+      setVisibleCount(INITIAL_VISIBLE_COUNT);
+      setIsCollapsing(false);
+      setAnimatedStartIndex(null);
+      window.scrollBy({ top: -window.innerHeight * 0.1, behavior: "smooth" });
+    }, 250);
+  };
+
+  const handleShowMore = () => {
+    const prevCount = visibleCount;
+    const newCount = Math.min(filteredListings.length, prevCount + LOAD_STEP);
+    setAnimatedStartIndex(prevCount);
+    setVisibleCount(newCount);
+    setTimeout(() => setAnimatedStartIndex(null), 600);
+  };
 
   const filteredListings = listings.filter((item) => {
     const matchesLocation = filters.location === "Any location" || item.location === filters.location;
@@ -683,7 +726,7 @@ export default function Home() {
         {isLoading ? (
           <LoadingSkeleton />
         ) : (
-          <>
+          <div ref={listingsRef} className="scroll-mt-24">
             <DesktopView
               activeImage={activeImage}
               setActiveImage={setActiveImage}
@@ -697,6 +740,10 @@ export default function Home() {
                 setFilters(nextFilters);
                 setVisibleCount(INITIAL_VISIBLE_COUNT);
               }}
+              onShowLess={handleShowLess}
+              onShowMore={handleShowMore}
+              animatedStartIndex={animatedStartIndex}
+              isCollapsing={isCollapsing}
             />
             <MobileView
               activeImage={activeImage}
@@ -711,8 +758,12 @@ export default function Home() {
                 setFilters(nextFilters);
                 setVisibleCount(INITIAL_VISIBLE_COUNT);
               }}
+              onShowLess={handleShowLess}
+              onShowMore={handleShowMore}
+              animatedStartIndex={animatedStartIndex}
+              isCollapsing={isCollapsing}
             />
-          </>
+          </div>
         )}
       </main>
 
@@ -734,12 +785,25 @@ export default function Home() {
             <h3 className="font-semibold text-slate-900">Reach us</h3>
             <ul className="mt-2 space-y-2">
               <li>+256 700 000 000</li>
-              <li>support@4rent.co.ke</li>
+              <li>support@4rent.co.ug</li>
               <li>Kampala, Uganda</li>
             </ul>
           </div>
         </div>
       </footer>
+
+      {showBackToTop && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="float fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition hover:bg-emerald-700"
+          aria-label="Back to top"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 15l-6-6-6 6" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
