@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "4Rent - Find Your Next Place",
   description: "The best platform to find rental properties",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({

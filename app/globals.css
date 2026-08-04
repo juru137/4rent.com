@@ -178,3 +178,59 @@ html.dark .shadow-sm {
 .float {
   animation: float 2.5s ease-in-out infinite;
 }
+
+/* Add to your global CSS file */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.25s ease-in forwards;
+}
+
+/* CSS variables for theme support */
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --surface: #f8fafc;
+  --surface-strong: #ffffff;
+  --border-color: #e2e8f0;
+  --muted: #64748b;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --surface: #1e293b;
+  --surface-strong: #1e293b;
+  --border-color: #334155;
+  --muted: #94a3b8;
+}

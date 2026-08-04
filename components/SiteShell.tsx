@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { SITE_CONTACT, formatPhoneForLink } from "../lib/listings";
 
 export default function SiteShell({ children }: { children: ReactNode }) {
   return (
@@ -13,9 +14,6 @@ export default function SiteShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2 sm:gap-4">
             <Link href="/" className="text-sm font-medium text-slate-600 transition hover:text-emerald-600">
               Home
-            </Link>
-            <Link href="/login" className="rounded-full bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">
-              Login
             </Link>
           </div>
         </div>
@@ -35,14 +33,14 @@ export default function SiteShell({ children }: { children: ReactNode }) {
             <h3 className="font-semibold text-slate-900">Quick links</h3>
             <ul className="mt-2 space-y-2">
               <li><Link href="/" className="transition hover:text-emerald-600">Home</Link></li>
-              <li><Link href="/login" className="transition hover:text-emerald-600">Login</Link></li>
             </ul>
           </div>
           <div>
             <h3 className="font-semibold text-slate-900">Reach us</h3>
             <ul className="mt-2 space-y-2">
-                <li>+256 700 000 000</li>
-                <li>support@4rent.co.ke</li>
+                <li>{SITE_CONTACT.whatsapp}</li>
+                <li>{SITE_CONTACT.call}</li>
+                <li>{SITE_CONTACT.email}</li>
                 <li>Kampala, Uganda</li>
             </ul>
           </div>

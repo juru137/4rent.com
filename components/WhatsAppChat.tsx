@@ -138,7 +138,7 @@ export default function WhatsAppChat() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex items-center justify-center rounded-full bg-emerald-600 p-4 text-white shadow-2xl shadow-emerald-900/30 transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+        className="inline-flex cursor-pointer items-center justify-center rounded-full bg-emerald-600 p-4 text-white shadow-2xl shadow-emerald-900/30 transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
         aria-label={open ? "Close chat window" : "Open chat window"}
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">

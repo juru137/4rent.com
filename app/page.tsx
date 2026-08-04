@@ -1,9 +1,12 @@
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState, useRef, type Dispatch, type SetStateAction } from "react";
-import { listings } from "../lib/listings";
+import { getWebListings, SITE_CONTACT, formatPhoneForLink, type Listing } from "../lib/listings";
 
 type ThemeMode = "light" | "dark";
 
@@ -27,7 +30,7 @@ function ThemeToggle({
     <button
       type="button"
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="rounded-full border border-[var(--border-color)] bg-[var(--surface)] p-2 text-[var(--foreground)] transition hover:border-emerald-500 hover:text-emerald-600"
+      className="cursor-pointer rounded-full border border-[var(--border-color)] bg-[var(--surface)] p-2 text-[var(--foreground)] transition hover:border-emerald-500 hover:text-emerald-600"
       aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
     >
       {theme === "light" ? (
@@ -119,8 +122,8 @@ function DesktopView({
   activeImage: number;
   setActiveImage: (value: number) => void;
   visibleCount: number;
-  visibleListings: typeof listings;
-  filteredListings: typeof listings;
+  visibleListings: Listing[];
+  filteredListings: Listing[];
   setVisibleCount: Dispatch<SetStateAction<number>>;
   isShowingAll: boolean;
   filters: {
@@ -260,11 +263,13 @@ function DesktopView({
                         <p className="mt-1 text-sm text-slate-500">{item.location}</p>
                       </div>
                     </div>
-                    <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-                      <span>{item.posted}</span>
+                    <div className="mt-3 flex items-center justify-between gap-2 text-sm text-slate-600">
+                      <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+                        {item.posted}
+                      </span>
                       <span className="font-semibold text-slate-900">{item.price}</span>
                     </div>
-                    <div className="mt-auto flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                    <div className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-4 w-4"
@@ -291,7 +296,7 @@ function DesktopView({
             <button
               type="button"
               onClick={onShowMore}
-              className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="cursor-pointer rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               Show more
             </button>
@@ -301,7 +306,7 @@ function DesktopView({
             <button
               type="button"
               onClick={onShowLess}
-              className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="cursor-pointer rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               Show less
             </button>
@@ -359,18 +364,17 @@ function MobileView({
   visibleCount,
   visibleListings,
   filteredListings,
-  setVisibleCount,
   isShowingAll,
   filters,
   setFilters,
   onShowLess,
+  onShowMore,
 }: {
   activeImage: number;
   setActiveImage: (value: number) => void;
   visibleCount: number;
-  visibleListings: typeof listings;
-  filteredListings: typeof listings;
-  setVisibleCount: Dispatch<SetStateAction<number>>;
+  visibleListings: Listing[];
+  filteredListings: Listing[];
   isShowingAll: boolean;
   filters: {
     location: string;
@@ -380,6 +384,7 @@ function MobileView({
   };
   setFilters: (value: { location: string; rooms: string; type: string; price: string }) => void;
   onShowLess: () => void;
+  onShowMore: () => void;
 }) {
   return (
     <div className="lg:hidden">
@@ -498,11 +503,13 @@ function MobileView({
                         <p className="mt-1 text-sm text-slate-500">{item.location}</p>
                       </div>
                     </div>
-                    <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
-                      <span>{item.posted}</span>
+                    <div className="mt-2 flex items-center justify-between gap-2 text-sm text-slate-600">
+                      <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                        {item.posted}
+                      </span>
                       <span className="font-semibold text-slate-900">{item.price}</span>
                     </div>
-                    <div className="mt-auto flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                    <div className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-4 w-4"
@@ -528,8 +535,8 @@ function MobileView({
           <div className="mt-5 flex justify-center">
             <button
               type="button"
-              onClick={() => setVisibleCount((prev) => Math.min(filteredListings.length, prev + LOAD_STEP))}
-              className="rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
+              onClick={onShowMore}
+              className="cursor-pointer rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
             >
               Show more
             </button>
@@ -539,7 +546,7 @@ function MobileView({
             <button
               type="button"
               onClick={onShowLess}
-              className="rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
+              className="cursor-pointer rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
             >
               Show less
             </button>
@@ -573,6 +580,7 @@ function MobileView({
 }
 
 export default function Home() {
+  const [allListings, setAllListings] = useState<Listing[]>(() => getWebListings());
   const [activeImage, setActiveImage] = useState(0);
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
   const [filters, setFilters] = useState({
@@ -587,11 +595,28 @@ export default function Home() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [animatedStartIndex, setAnimatedStartIndex] = useState<number | null>(null);
   const [isCollapsing, setIsCollapsing] = useState(false);
+  const [roomForm, setRoomForm] = useState({
+    title: "",
+    location: "Kampala",
+    rooms: "1 room",
+    type: "Single Room",
+    price: "",
+    amount: "",
+    description: "",
+    size: "",
+    bathrooms: "",
+    furnished: "Semi-furnished",
+    deposit: "1 month",
+    availability: "Available now",
+    contact: "",
+    image: "",
+    galleryImages: "",
+  });
+  const [roomEditingId, setRoomEditingId] = useState<number | null>(null);
 
   useEffect(() => {
     const storedTheme = window.localStorage.getItem("theme");
     if (storedTheme === "light" || storedTheme === "dark") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(storedTheme);
     } else {
       setTheme("light");
@@ -603,6 +628,21 @@ export default function Home() {
     }, 700);
 
     return () => window.clearTimeout(loadingTimer);
+  }, []);
+
+  useEffect(() => {
+    const syncListings = () => setAllListings(getWebListings());
+
+    const handleStorage = () => syncListings();
+    const handleDashboardSync = () => syncListings();
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("4rent:listings-updated", handleDashboardSync);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("4rent:listings-updated", handleDashboardSync);
+    };
   }, []);
 
   useEffect(() => {
@@ -645,7 +685,7 @@ export default function Home() {
     setTimeout(() => setAnimatedStartIndex(null), 600);
   };
 
-  const filteredListings = listings.filter((item) => {
+  const filteredListings = (allListings.length > 0 ? allListings : getWebListings()).filter((item) => {
     const matchesLocation = filters.location === "Any location" || item.location === filters.location;
     const matchesRooms =
       filters.rooms === "Any" ||
@@ -665,18 +705,117 @@ export default function Home() {
   const visibleListings = filteredListings.slice(0, visibleCount);
   const isShowingAll = visibleCount >= filteredListings.length;
 
+  const resetRoomForm = () => {
+    setRoomForm({
+      title: "",
+      location: "Kampala",
+      rooms: "1 room",
+      type: "Single Room",
+      price: "",
+      amount: "",
+      description: "",
+      size: "",
+      bathrooms: "",
+      furnished: "Semi-furnished",
+      deposit: "1 month",
+      availability: "Available now",
+      contact: "",
+      image: "",
+      galleryImages: "",
+    });
+    setRoomEditingId(null);
+  };
+
+  const persistListings = (nextListings: Listing[]) => {
+    setAllListings(nextListings);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("4rent_room_listings", JSON.stringify(nextListings));
+    }
+  };
+
+  const handleRoomSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!roomForm.title.trim() || !roomForm.price.trim() || !roomForm.contact.trim()) {
+      return;
+    }
+
+    const galleryList = roomForm.galleryImages
+      .split(/\n|,/)
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+
+    const finalImage = roomForm.image || galleryList[0] || heroImages[0];
+    const finalGallery = galleryList.length > 0 ? galleryList : [finalImage];
+
+    const nextListing: Listing = {
+      id: roomEditingId ?? Date.now(),
+      title: roomForm.title.trim(),
+      location: roomForm.location,
+      rooms: roomForm.rooms,
+      type: roomForm.type,
+      posted: "today",
+      price: roomForm.price.trim(),
+      amount: Number(roomForm.amount) || 0,
+      image: finalImage,
+      images: finalGallery,
+      description: roomForm.description.trim() || "Comfortable space with modern essentials and a welcoming neighborhood vibe.",
+      size: roomForm.size || "30 sqm",
+      bathrooms: roomForm.bathrooms || "1 bathroom",
+      furnished: roomForm.furnished,
+      deposit: roomForm.deposit,
+      availability: roomForm.availability,
+      contact: roomForm.contact.trim(),
+      createdAt: new Date().toISOString(),
+      status: "Active",
+    };
+
+    const nextListings = roomEditingId
+      ? allListings.map((item) => (item.id === roomEditingId ? nextListing : item))
+      : [nextListing, ...allListings];
+
+    persistListings(nextListings);
+    resetRoomForm();
+  };
+
+  const handleRoomEdit = (item: Listing) => {
+    setRoomForm({
+      title: item.title,
+      location: item.location,
+      rooms: item.rooms,
+      type: item.type,
+      price: item.price,
+      amount: String(item.amount),
+      description: item.description,
+      size: item.size,
+      bathrooms: item.bathrooms,
+      furnished: item.furnished,
+      deposit: item.deposit,
+      availability: item.availability,
+      contact: item.contact,
+      image: item.image,
+      galleryImages: (item.images ?? []).join(", "),
+    });
+    setRoomEditingId(item.id);
+  };
+
+  const handleRoomDelete = (id: number) => {
+    persistListings(allListings.filter((item) => item.id !== id));
+    if (roomEditingId === id) resetRoomForm();
+  };
+
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <nav className="sticky top-0 z-40 border-b border-[var(--border-color)] bg-[var(--surface-strong)] px-4 py-4 shadow-sm backdrop-blur sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex cursor-pointer items-center gap-2 transition hover:opacity-90">
+            <img src="/icon.png" alt="4Rent logo" className="h-8 w-8 rounded-lg object-cover" />
             <span className="text-xl font-semibold tracking-wide text-[var(--foreground)]">4Rent</span>
-          </div>
+          </Link>
 
-          <div className="flex items-center gap-2 sm:gap-4 text-[var(--foreground)]">
+          <div className="ml-auto flex items-center gap-2 sm:gap-4 text-[var(--foreground)]">
             <a
-              href="tel:+256700000000"
-              className="flex items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-emerald-500 hover:text-emerald-600"
+              href={`tel:${formatPhoneForLink(SITE_CONTACT.call)}`}
+              className="flex cursor-pointer items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-emerald-500 hover:text-emerald-600"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -690,14 +829,14 @@ export default function Home() {
               >
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12.87.33 1.72.63 2.54l-1.2 1.2a15.9 15.9 0 0 0 6.28 6.28l1.2-1.2c.82.3 1.67.51 2.54.63A2 2 0 0 1 22 16.92Z" />
               </svg>
-              <span className="hidden sm:inline">+256 700 000 000</span>
+              <span className="hidden sm:inline">{SITE_CONTACT.call}</span>
             </a>
 
             <a
-              href="https://wa.me/256700000000"
+              href={`https://wa.me/${formatPhoneForLink(SITE_CONTACT.whatsapp)}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-emerald-500 hover:text-emerald-600"
+              className="flex cursor-pointer items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-emerald-500 hover:text-emerald-600"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -707,17 +846,10 @@ export default function Home() {
               >
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.272-.099-.471-.149-.67.149-.198.297-.768.967-.941 1.166-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.149-.174.199-.297.299-.495.1-.198.05-.372-.025-.521-.075-.149-.67-1.612-.92-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.521.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.49 1.694.625.712.227 1.36.195 1.872.118.572-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.174-1.413-.074-.124-.272-.198-.57-.347Z" />
               </svg>
-              <span className="hidden sm:inline">+256 700 111 111</span>
+              <span className="hidden sm:inline">{SITE_CONTACT.whatsapp}</span>
             </a>
 
             <ThemeToggle theme={theme} setTheme={setTheme} />
-
-            <a
-              href="/login"
-              className="rounded-full bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
-            >
-              Login
-            </a>
           </div>
         </div>
       </nav>
@@ -751,7 +883,6 @@ export default function Home() {
               visibleCount={visibleCount}
               visibleListings={visibleListings}
               filteredListings={filteredListings}
-              setVisibleCount={setVisibleCount}
               isShowingAll={isShowingAll}
               filters={filters}
               setFilters={(nextFilters) => {
@@ -760,8 +891,6 @@ export default function Home() {
               }}
               onShowLess={handleShowLess}
               onShowMore={handleShowMore}
-              animatedStartIndex={animatedStartIndex}
-              isCollapsing={isCollapsing}
             />
           </div>
         )}
@@ -772,23 +901,45 @@ export default function Home() {
           <div>
             <h3 className="font-semibold text-slate-900">4Rent</h3>
             <p className="mt-2 text-slate-600">Find trusted rooms and homes with fast search tools for renters, landlords, and brokers.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">Trusted</span>
+              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700">Premium</span>
+            </div>
           </div>
           <div>
             <h3 className="font-semibold text-slate-900">Quick links</h3>
             <ul className="mt-2 space-y-2">
-              <li><a href="#" className="transition hover:text-emerald-600">About us</a></li>
-              <li><a href="#" className="transition hover:text-emerald-600">Contact</a></li>
-              <li><a href="#" className="transition hover:text-emerald-600">Privacy policy</a></li>
+              <li><a href="#" className="cursor-pointer transition hover:text-emerald-600">About us</a></li>
+              <li><a href="#" className="cursor-pointer transition hover:text-emerald-600">Contact</a></li>
+              <li><a href="#" className="cursor-pointer transition hover:text-emerald-600">Privacy policy</a></li>
             </ul>
           </div>
           <div>
             <h3 className="font-semibold text-slate-900">Reach us</h3>
             <ul className="mt-2 space-y-2">
-              <li>+256 700 000 000</li>
-              <li>support@4rent.co.ug</li>
+              <li>{SITE_CONTACT.whatsapp}</li>
+              <li>{SITE_CONTACT.call}</li>
+              <li>{SITE_CONTACT.email}</li>
               <li>Kampala, Uganda</li>
             </ul>
+            <div className="mt-4 flex items-center gap-3">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M13.5 22v-8h2.7l.4-3h-3.1V7.5c0-.9.3-1.5 1.6-1.5H17V3.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3V11H8v3h2.3v8h3.2Z"/></svg>
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7Zm5 3.2A4.8 4.8 0 1 1 7.2 12 4.8 4.8 0 0 1 12 7.2Zm0 2A2.8 2.8 0 1 0 14.8 12 2.8 2.8 0 0 0 12 9.2Zm4.7-3.4a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"/></svg>
+              </a>
+              <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X" className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M18.9 2h3.4l-7.4 8.5L22.7 22h-6.7l-5.2-7.4L4.7 22H1.3l7.9-9.1L1.3 2h6.8l4.7 6.8L18.9 2Zm-1.2 18h1.8L7.2 3.9H5.3L17.7 20Z"/></svg>
+              </a>
+              <a href={`https://wa.me/${formatPhoneForLink(SITE_CONTACT.whatsapp)}`} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.39 2.13 11.8c0 2.07.64 4.08 1.75 5.78L2 22l4.57-1.46A9.92 9.92 0 0 0 12.04 22c5.46 0 9.9-4.39 9.9-9.8S17.5 2 12.04 2Zm5.42 13.4c-.23.66-1.36 1.22-1.87 1.29-.48.06-1.08.09-3.48-.73-2.94-.82-4.84-3.19-4.98-3.33-.14-.14-1.13-1.49-1.13-2.86 0-1.37.71-2.04 1-2.32.26-.24.58-.3.8-.3h.58c.18 0 .42.01.64.48.23.5.78 1.74.84 1.86.06.12.1.27.02.43-.08.17-.12.27-.24.42-.12.16-.26.35-.37.47-.12.12-.25.26-.1.51.15.25.68 1.12 1.46 1.83.99.87 1.82 1.14 2.08 1.27.26.14.42.12.57-.07.15-.2.62-.72.79-.97.17-.25.34-.21.58-.13.24.08 1.51.71 1.77.84.26.14.43.2.5.31.07.11.07.64-.16 1.3Z"/></svg>
+              </a>
+            </div>
           </div>
+        </div>
+        <div className="mx-auto mt-8 max-w-6xl border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
+          © 2026 4Rent. All rights reserved.
         </div>
       </footer>
 
